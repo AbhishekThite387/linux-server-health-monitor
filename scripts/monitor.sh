@@ -10,8 +10,15 @@ log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
-WARNING_LOAD=2.0
-CRITICAL_LOAD=4.0
+CONFIG_FILE="$HOME/linux-server-monitor/config/monitor.conf"
+
+if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+else
+    echo "ERROR: Configuration file not found: $CONFIG_FILE"
+    exit 1
+fi
+
 
 echo "=================================="
 echo "   LINUX SERVER HEALTH REPORT"
@@ -44,8 +51,6 @@ fi
 echo
 
 # Memory Monitoring
-WARNING_MEMORY=80
-CRITICAL_MEMORY=90
 
 MEMORY_USAGE=$(awk '/MemTotal:/ {total=$2} /MemAvailable:/ {available=$2} END {
     printf "%.0f", ((total - available) / total) * 100
@@ -68,8 +73,7 @@ free -h
 echo
 
 # Disk Monitoring
-WARNING_DISK=80
-CRITICAL_DISK=90
+
 
 DISK_USAGE=$(df -P / | awk 'NR==2 {gsub(/%/, "", $5); print $5}')
 
