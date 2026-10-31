@@ -10,6 +10,25 @@ log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
+# Record critical incidents
+log_incident() {
+    local resource="$1"
+    local value="$2"
+
+    local incident_file="$HOME/linux-server-monitor/reports/incidents.log"
+
+    {
+        echo "================================"
+        echo "INCIDENT DETECTED"
+        echo "Date: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "Issue: $resource"
+        echo "Value: $value"
+        echo "Status: CRITICAL"
+        echo "================================"
+        echo
+    } >> "$incident_file"
+}
+
 CONFIG_FILE="$HOME/linux-server-monitor/config/monitor.conf"
 
 if [ -f "$CONFIG_FILE" ]; then
@@ -38,6 +57,7 @@ if awk -v current_load="$CURRENT_LOAD" -v limit="$CRITICAL_LOAD" \
     'BEGIN {exit !(current_load >= limit)}'; then
     echo "CPU Load Status: CRITICAL"
     log_message "CPU Load: $CURRENT_LOAD | Status: CRITICAL"
+    log_incident "CPU Load" "$CURRENT_LOAD"
   
 elif awk -v current_load="$CURRENT_LOAD" -v limit="$WARNING_LOAD" \
     'BEGIN {exit !(current_load >= limit)}'; then
@@ -61,6 +81,7 @@ echo "Memory Usage: ${MEMORY_USAGE}%"
 if [ "$MEMORY_USAGE" -ge "$CRITICAL_MEMORY" ]; then
     echo "Memory Status: CRITICAL"
     log_message "Memory Usage: ${MEMORY_USAGE}% | Status: CRITICAL"
+    log_incident "Memory Usage" "${MEMORY_USAGE}%"
 elif [ "$MEMORY_USAGE" -ge "$WARNING_MEMORY" ]; then
     echo "Memory Status: WARNING"
     log_message "Memory Usage: ${MEMORY_USAGE}% | Status: WARNING"
@@ -82,6 +103,7 @@ echo "Disk Usage: ${DISK_USAGE}%"
 if [ "$DISK_USAGE" -ge "$CRITICAL_DISK" ]; then
     echo "Disk Status: CRITICAL"
     log_message "Disk Usage: ${DISK_USAGE}% | Status: CRITICAL"
+    log_incident "Disk Usage" "${DISK_USAGE}%"
 elif [ "$DISK_USAGE" -ge "$WARNING_DISK" ]; then
     echo "Disk Status: WARNING"
     log_message "Disk Usage: ${DISK_USAGE}% | Status: WARNING"
