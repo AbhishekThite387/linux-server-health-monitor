@@ -4,6 +4,7 @@
 # Version 1.1
 
 LOG_FILE="$HOME/linux-server-monitor/logs/monitor.log"
+CONFIG_FILE="$HOME/linux-server-monitor/config/monitor.conf"
 mkdir -p "$(dirname "$LOG_FILE")"
 
 log_message() {
@@ -29,14 +30,27 @@ log_incident() {
     } >> "$incident_file"
 }
 
-CONFIG_FILE="$HOME/linux-server-monitor/config/monitor.conf"
-
-if [ -f "$CONFIG_FILE" ]; then
-    source "$CONFIG_FILE"
-else
+if [ ! -f "$CONFIG_FILE" ]; then
     echo "ERROR: Configuration file not found: $CONFIG_FILE"
     exit 1
 fi
+
+if [ ! -r "$CONFIG_FILE" ]; then
+    echo "ERROR: Configuration file is not readable: $CONFIG_FILE"
+    exit 1
+fi
+
+source "$CONFIG_FILE"
+
+# Validate configuration thresholds
+for value in "$WARNING_LOAD" "$CRITICAL_LOAD" \
+             "$WARNING_MEMORY" "$CRITICAL_MEMORY" \
+             "$WARNING_DISK" "$CRITICAL_DISK"; do
+    if ! [[ "$value" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+        echo "ERROR: Invalid threshold value: $value"
+        exit 1
+    fi
+done
 
 
 echo "=================================="
