@@ -8,7 +8,15 @@ CONFIG_FILE="$HOME/linux-server-monitor/config/monitor.conf"
 mkdir -p "$(dirname "$LOG_FILE")"
 
 log_message() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+    local message
+    message="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+
+    if ! printf '%s\n' "$message" >> "$LOG_FILE" 2>/dev/null; then
+        echo "ERROR: Cannot write to log file: $LOG_FILE" >&2
+        return 1
+    fi
+
+    echo "$message"
 }
 
 # Record critical incidents
