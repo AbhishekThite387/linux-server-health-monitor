@@ -1,0 +1,9 @@
+/home/ubuntu/linux-server-monitor/logs/monitor.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
